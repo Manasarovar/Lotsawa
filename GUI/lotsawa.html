@@ -1,0 +1,528 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="_css/lotsawa.css" title="description_of_style">
+
+    <style></style>
+
+    <script type="text/javascript">
+        var jsobj = {}
+        var Rus_Tr_Txt = '';
+        var wrd_id = '';
+        var sent_id = '';
+        var user='';
+    </script>
+
+    <script src="/_js/dict_esp.js?12123" type="text/javascript"></script>
+    <script src="/_js/utils.js" type="text/javascript"></script>
+    <script src="/_js/mousetrap.min.js" type="text/javascript"></script>
+    <link rel="shortcut icon" href="data:,">
+    <!--<script src="/_js/lotsawa.js" type="text/javascript"></script>
+-->
+<script id='parse page url'>
+    function page_url() {
+        let url=window.location.href;
+        if (url.includes('ocrData')) {
+            let ocrData = url.split('ocrData=')[1].split('&')[0];
+            let index = url.split('index=')[1].split('&')[0];
+            let field= parseInt(url.split('field=')[1], 10)
+            
+            if (field !=0){
+                p_pre=`/?ocrData=${ocrData}&index=${index}&field=${field - 1}`
+                pg_pre.setAttribute('href', p_pre)}
+            else {pg_pre.setAttribute('href', '/')}
+            let p_nxt = `/?ocrData=${ocrData}&index=${index}&field=${field + 1}`
+            pg_nxt.setAttribute('href', p_nxt)
+        }
+    }
+
+</script>
+
+    <script id='Upd_Header_Def_SentTr'>
+        function Upd_Header_Def_SentTr(opt) {
+            //добавили в Шапку выбор пользователя
+            document.getElementById('user_word').innerHTML = opt;
+
+            //take key_word
+            //var key = document.getElementById('key').innerText;
+
+            // find Result.element(key) & set new def
+            //let tag = document.getElementById(wrd_id);
+
+            document.getElementById(wrd_id).setAttribute("def", opt);
+            //alert(document.getElementById(wrd_id));
+            // Update Sentence Translation
+            //let Sent_prt_speach='';
+            //let Sent_Html = '';
+            let Sent_Tr_txt = '';
+            sent_id = document.getElementById(wrd_id).parentNode.id
+
+            var child = document.getElementById(sent_id).children;
+            for (var i = child.length - 1; i >= 0; i--) {
+                //Sent_prt_speach = Sent_prt_speach + '⇎<kbd class="draggable">' + child[i].className + '</kbd>';
+                //Sent_Html = Sent_Html + '⇎<kbd class="draggable">' + child[i].getAttribute("def") + '</kbd>';
+                Sent_Tr_txt = child[i].getAttribute("def") + ' ' + Sent_Tr_txt;
+            };
+            //document.getElementById('Sent_RusTr').innerHTML = Sent_Html;
+            //document.getElementById('Sent_RusTr').innerHTML = Sent_prt_speach;
+            document.getElementById('Sent_box').value = Sent_Tr_txt;
+        }
+    </script>
+
+    <script id='Send2DB_Pair2JSOBJ_Pair2NewWord'>
+        function new_pair(key, new_Word, rw) {
+            // rw=0 - addWord - ДОБАВИТЬ ЗНАЧЕНИЕ к КЛЮЧУ
+            // rw=1 - putWord - ПЕРЕЗАПИСЬ КЛЮЧ-ЗНАЧЕНИЕ
+            //var dataBase = 'dLotsawa'  //(словарь памяти переводов)
+            sendHTTP('application/json', '/create/post.esp',
+                '{"key":"' + key + '", "value":"' + new_Word + '", "rw":"' + rw + '", "ocrData":"prs2txt"}',// "db":"' + dataBase + '"}',
+                function (text) {
+                    console.log("done add: " + key + "=" + new_Word)
+                }
+            );
+
+            // Добавить Пару в Индекс ДБ
+            //Add_IndexedDb(key, new_Word, 'New_Pair');
+
+            // Если это добавление нового ЗНАЧЕНИЯ к тиб слову из списка, то нужно не добавить новую строку в конец,
+            // а прицепить спереди новое ЗНАЧЕНИЕ к значениям конкретного тиб слова.
+
+            // Добавить Пару в jsobj
+            if (key in jsobj && rw!=true) {
+                jsobj[key].unshift(new_Word);
+            } else {
+                //jsobj[key].concat(new_Word)
+                jsobj[key] = [new_Word];
+            }
+            // Export new words
+            //console.log(JSON.stringify(jsobj))
+
+            // Добавить Пару в 'New_Wrds'
+            let html = '';
+            for (let i = 0; i < Object.keys(jsobj).length; i++) {
+                html = Object.keys(jsobj)[i] + '=' + Object.values(jsobj)[i] + ' \n' + html
+            }
+            document.getElementById('New_Wrds').innerHTML = html;
+
+            // Добавляем в Локал Сторадж
+			/* localStorage.setItem(key, [new_Word]);
+				let new_pair = key + '= xxx; ' + new_Word;
+			*/
+        }
+    </script>
+
+    <title>Lotsawa</title>
+</head>
+
+<body onload = "page_url()">
+    <!--WORD Modal Vindow
+	<div id="WordModal" class="fon_okna">-->
+
+    <div id="ModalWindw" class="okno" style="opacity: 0; pointer-events: none;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="key">སྤྱོད</h3>
+            <a href="#cansl" id="clos" title="Close" class="picto">🙏</a>
+        </div>
+        <script id="close Word Window">
+            clos.onclick = function close() {
+                document.querySelector('#ModalWindw').style = "opacity: 0; pointer-events: none;";
+            };
+        </script>
+        <div class="user_transl" id="user_word">
+            <div class="vote_line" style="width: 13.2771%;"></div>
+        </div>
+
+        <div class="transl-lst" id="trnsl_opt">
+            <div class="option">
+                <div class="vote_line" style="width: 10%">практика</div>
+            </div>
+
+            <div class="option">
+                <div class="vote_line" style="width: 17.0179%;">поведение</div>
+            </div>
+        </div>
+
+        <div class="footer_expanded-form">
+            <form action="." name="Input_new_word" method="post">
+                <input name="new_Word" id='nw_opt' title='Ввести новый перевод и повернуть колесо Дхармы' type="text"
+                    autocomplete="off" class="mousetrap" value="">
+                <a href="#" id="add_word" title='Добавить новый перевод и его тибетскую пару в: 
+				+ список Новые Пары (в правом окне), + (IndexedDB), + 00_NW.txt 
+				(!!ВАЖНО список очищается по закрытию/обновлению окна!!).' class="picto">☸️</a>
+                <!--<input type="submit" title="Add new word to Dict" value="✔" class="picto" 
+						onclick="add_userWord()">
+                    class="input_new_val"-->
+            </form>
+        </div>
+
+        <script id="Добавить новый перевод слова из карточки слова">
+            add_word.onclick = function add_word() {
+                var new_Word = document.Input_new_word.new_Word.value;
+
+                Upd_Header_Def_SentTr(new_Word);
+
+                // Add_New_Word in Dict
+                //take key_word
+                var key = document.getElementById('key').innerText;
+                var elem = document.getElementById('h_' + key);
+
+                //node.prepend(...nodes or strings) – вставляет в node в начало,
+                //node.before(...nodes or strings) –- вставляет прямо перед node,
+                //node.after(...nodes or strings) –- вставляет сразу после node,
+
+                //for (let rus of new_Word) {
+                var newDiv = document.createElement('div');
+                newDiv.className = "usr_wrd";
+                newDiv.id = '';
+                newDiv.innerHTML = key + ' : ' + new_Word + '<div class="vote_line" style = "width: 57%;"></div >';
+                elem.prepend(newDiv);
+                //}
+
+                new_pair(key, new_Word, rw_bo_ru.checked);
+
+                document.getElementById('nw_opt').value = ""
+            }
+        </script>
+
+        <script id="Изменение ДФН по выбранному селекту">
+            //!!!!!   MAIN   !!!!!
+            trnsl_opt.onclick = function Change_Dfn(event) {
+                //take option value
+                let id = event.target.id;
+
+                let opt = document.getElementById(id).innerText;
+                
+                    // expected output: ReferenceError: nonExistentFunction is not defined
+                    // Note - error messages will vary depending on browser
+                
+                try{
+                    Upd_Header_Def_SentTr(opt);
+                }catch (TypeError) {
+                                    console.error('В Пустоте, на что опереться?! Жми на вариант перевода');
+                                    // expected output: ReferenceError: nonExistentFunction is not defined
+                                    // Note - error messages will vary depending on browser
+                                }
+            }
+        </script>
+    </div>
+
+
+    <article class="Tib_Txt">
+        <h7 id="_@"></h7>
+        <section lang="bo" id="Result">
+            %Report_1()
+        </section>
+        <br>
+    </article>
+
+    <aside class="Right_Dict">
+
+        <!--Form
+	<a href="/login">Enter Tib Txt</a>-->
+
+        <!--<p style='font-weight: 600'> Upload Tibetan Txt File </p>  
+	<form name="Input_Tb_Str" method="post" action="." style="position: relative;right: 0;top: 0;">
+		<input name="Tib_Strn" title="Вставьте сюда тибетский текст для форматирования и 
+				поверните колесо Дхармы." class="input_new_val" size='18'>
+		<input type="submit" class="btn" title="Форматировать введенный Тибетский Текст" value="☸"
+			onclick="FN_Tb_Str()">-->
+        <!--<a href="#" id="Format_TibTxt" title='Загрузите файл с тибетским текстом для форматирования. 
+				Поверните колесо Дхармы.' class="picto">Upload TibTxtFile ☸</a>
+		
+		<span class="crds"></span>
+		<hr>
+	</form>-->
+
+        <input type="checkbox" id="side-checkbox" />
+        <div class="side-panel">
+            <label class="side-button" for="side-checkbox">🙏</label>
+            <h4 class="side-title">Новые Пары добавить | 
+           <label for='rw_bo_ru'>замена 
+            <input type="checkbox" id="rw_bo_ru" style='position: inherit;' \
+                title="ЗАМЕНИТЬ новым [тибетское слово-сочетание=перевод]" value="rw"></label>
+                
+</h4> <hr>
+            <input name="Tib_Rus" id="nw-pair" title="Ввести новую пару [тибетское слово-сочетание=перевод] и
+					 повернуть колесо Дхармы" style='width: 84.5%;' class="input_new_val" size="18">
+            <a href="#" id="Add_Tib_Rus" title="Добавить [тибетское слово-сочетание=перевод] в: 
+				+ список Новые Пары (в правом окне), + (IndexedDB), + 00_NW.txt 
+					(!!ВАЖНО список очищается по закрытию/обновлению окна!!). ☸" class="picto">☸️</a>
+            <hr>
+            <div id='resp' style="overflow: overlay; word-wrap: break-word;"></div>
+            <textarea id="New_Wrds" title='После добавления новой пары.значения, 
+						здесь появляется добавленная пара, можно редактировать.' class="pair_lst" value=""></textarea>
+
+        </div>
+
+        <!--<label class="side-button" for="side-checkbox">
+			<div class="side-b side-open" title="Панель добавления новых пар [тибетское слово-сочетание=перевод].">
+				<kbd>WRD</kbd></div>
+		</label>-->
+
+        <!--<script  action=".">
+			input.addEventListener("keyup", function (event) {
+				alert('adasd')
+				if (event.keyCode === 13) {
+					event.preventDefault();
+					document.New_Tib_Rus.getElementById("Add_Tib_Rus").click();
+				}
+			});
+		</script>-->
+
+        <script id="добавить новую пару" type="text/javascript">
+            Add_Tib_Rus.onclick = function Add_Tib_Rus() {
+
+                var Tib_Rus = document.getElementById('nw-pair').value;
+                if (Tib_Rus.includes('=')) {
+                    Tib_Rus = Tib_Rus.split('=')
+                    let key = Tib_Rus[0];
+                    let new_Word = Tib_Rus[1];
+
+                    new_pair(key, new_Word, rw_bo_ru.checked);
+
+                } else {
+                    let key = Tib_Rus;
+
+                    //ЗАПРОС по КЛЮЧ через стандартный API
+                    //var dataBase = 'dLotsawa'  //(словарь Lotsawa)
+                    sendHTTP('application/json', '/create/post.esp',
+                        '{"key":"' + key + '", "ocrData":"getWord"}',//, "db":"' + dataBase + '"}',
+                        function (text) {
+                            document.getElementById('resp').innerHTML = text;
+                        }
+                    );
+                }
+                document.getElementById('nw-pair').value = ""
+            }
+        </script>
+
+        <h4 style="margin-top: 8px;">Перевод Текста:</h4>
+        <hr>
+            <textarea id="Tib_Str2Rus" style='width: 88%;height: auto;margin: 1px;background: beige;' title='Введите тибетский текст для перевода' class="input_sent" value=""></textarea>
+            <a href="#" id="Run_Tib_Str2Rus" style= 'position: inherit; top: 46px;' title="Перевод введенного тибетского текста" class="picto">☸️</a>
+            <hr>
+            <textarea id="Rus_Txt" style='height: 40%; margin: 1px;' title='После выбора (в карточке слова) всех (хотя-бы одного) значений слов предложения, 
+				здесь появляется технический перевод предложения, которое можно редактировать. 
+				По окончании редактуры повернуть колесо Дхармы.' class="input_sent" value=""></textarea>
+
+        <details style='display:none'>
+            <hr style='margin-top: 7%;'>
+            <summary>Перевод найденного словосочетания:</summary>
+            <section id="Slovar" class="Dict">
+                %Report_2()
+            </section>
+        </details>
+
+        <script id="Перевод введенного тибетского текста" type="text/javascript">
+            Run_Tib_Str2Rus.onclick = function Tib_Str2Rus() {
+                var usrTb = document.getElementById('Tib_Str2Rus').value
+                //alert(usrTb)
+                //target="_blank" 
+                // /?ocrData=usrBo
+                // /?index=0&field=0&ocrData=TibetanUTFToRus
+                
+                //ЗАПРОС по фразе через стандартный API
+                //var dataBase = 'dLotsawa'  //(словарь Lotsawa)
+                sendHTTP('application/json', '/create/post.esp',
+                    '{"usrTb":"' + usrTb + '"}', //, "ocrData":"usrBo"}',
+                    function (text) {
+                        //document.getElementById('Result').innerHTML = text;
+                        location.href = '/?index=usrBo&field=0&ocrData=TibetanUTFToRus'
+                    }
+                );
+
+                //    function (text) {
+                        //location.href='/#' 
+                        //let el = document.createElement('html');
+                        //el.innerHTML= text
+                        //document.getElementById('Result').innerHTML = new DOMParser().parseFromString(text,'text/html');
+                //    }
+                //);
+                document.getElementById('Tib_Str2Rus').value = ""
+            } 
+        </script>
+
+        <script id="Заполнить модальное окно + Вeрнуть ИД Выбора+koord">
+            Result.onclick = function modalWindowFill(event) {
+                try {
+                    //calculate click ID
+                    wrd_id = event.target.id; // Получили ID, т.к. в e.target содержится элемент по которому кликнули
+                    //alert(wrd_id)
+                    // The substituted value will be contained in the result variable
+                    let idx = wrd_id.replace(/\d+_(.+)/gm, '$1');
+                    var key = idx; //document.getElementById(wrd_id).innerText;
+                    //alert(idx)
+                    idx = "h_" + idx;
+
+                    //take value from Dict
+                    var trnsl_opt = document.getElementById(idx).innerHTML;
+
+                    //clear modal window
+                    //document.getElementById("key").innerHTML = "";
+                    //document.getElementById("trnsl_opt").value = "";
+                    document.getElementById("user_word").innerHTML = "";
+
+                    //alert(key)
+                    //Put to Modal
+                    document.getElementById('key').innerText = key;
+                    document.getElementById('trnsl_opt').innerHTML = trnsl_opt;
+
+                    // координаты поля относительно окна браузера
+                    let ResultCoords = this.getBoundingClientRect();
+
+                    // мяч имеет абсолютное позиционирование (position:absolute), поле - относительное (position:relative)
+                    // таким образом, координаты мяча рассчитываются относительно внутреннего, верхнего левого угла поля
+                    let oknoCoords = {
+                        top: event.clientY + 25, //- ResultCoords.top - Result.clientTop + 35,
+                        left: event.clientX - 115,//- ResultCoords.left - Result.clientLeft - 115
+                    };
+
+                    // запрещаем пересекать верхнюю границу поля
+                    //if (oknoCoords.top < 0) oknoCoords.top = 0;
+
+                    //запрещаем пересекать левую границу поля
+                    if (oknoCoords.left < 0) oknoCoords.left = 0;
+
+                    // // запрещаем пересекать правую границу поля
+                    if (oknoCoords.left + 230 > Result.clientWidth) {
+                        oknoCoords.left = Result.clientWidth - 230;
+                    }
+                    //alert(oknoCoords.left);
+                    // запрещаем пересекать нижнюю границу поля
+                    //if (oknoCoords.top + 230 > Result.clientHeight) {
+                    //	oknoCoords.top = Result.clientHeight - 230;
+                    //}
+
+                    //document.querySelector('#WordModal').style = oknoCoords.top + 'px' + oknoCoords.left + 'px';
+                    //document.getElementById("WordModal").style.left = oknoCoords.left + 'px';
+                    //document.getElementById("WordModal").style.top = oknoCoords.top + 'px';
+
+                    // Open
+                    //currentBtn.addClass('focus');
+                    //btn.removeClass('focus');
+                    let styl = 'left:' + oknoCoords.left + 'px; top:' + oknoCoords.top + 'px;';
+                    document.querySelector('#ModalWindw').style = styl + "display: content; opacity: 1; pointer-events: auto; overflow-y: auto;";
+                    //document.querySelector('#WordModal').style = "display: content; opacity: 1; pointer-events: auto; overflow-y: auto;";
+                    //
+                    //Close on Esc and X
+                    //document.addEventListener('keypress', function (e) {
+                    //	if (e.keyCode === 27) document.querySelector('#WordModal').style = "";
+                    //});
+
+                    //document.querySelector('#close').addEventListener('click', function () {
+                    //	document.querySelector('#ModalWindw').style = "opacity: 0; pointer-events: none;";
+                    //});
+                }
+                catch (TypeError) {
+                    console.error('В Пустоте, на что опереться?! Жми на тибетские слова!');
+                    // expected output: ReferenceError: nonExistentFunction is not defined
+                    // Note - error messages will vary depending on browser
+                }
+            }
+        </script>
+
+    </aside>
+
+    <footer class="Down_Sent">
+        <div>
+            <label for="setup-checkbox" id='Setup' class="setup-button"
+                                title="Настройки ⚛">⚙️</label>&nbsp;
+            <a href='/?ocrData=backUpDB' id='backUpDB' class="picto" title='Выгрузить Базу Данных с изменениями'>㏈</a>
+            &emsp;|&emsp;
+            <a href='' id='pg_pre' class="picto" title='Страница Назад ☚'>⏮</a>&nbsp;
+            <a href='/'class="picto" title='Открыть каталог текстов 📚'>📜</a>&nbsp;
+            <a href='' id='pg_nxt' class="picto" title='Страница Вперед ☛'>⏭</a>&emsp;
+            <span style='margin-left: 0.5vw;'> Авто-Перевод предложения [появится ⇓ после выбора (в карточке слова) всех (хотя-бы одного) значений]:</span>
+            
+            <div id="Sent_RusTr"></div>
+            <hr style="margin:3px">
+            <textarea id="Sent_box" style="margin-left:5px" title='После выбора (в карточке слова) всех (хотя-бы одного) значений слов предложения, 
+            		здесь появляется технический перевод предложения, которое можно редактировать. 
+            		По окончании редактуры повернуть колесо Дхармы.' class="input_sent" value=""></textarea>
+            <a href="#" id="ConcatTxt" title='Добавить тибетское предложение и перевод в хранилище (IndexedDB & Transl_Bo_Ru.txt) и 
+            		присоединить к Переводу Текста (в правом боковом окне).' class="picto" style="top:-10px">☸️</a>
+            
+            <script id="Save Sent Translation" type='text/javascript'>
+                ConcatTxt.onclick = function ConcatTxt() {
+                    var rus_trs = document.getElementById('Sent_box').value
+                    
+                    // Конкат в поле Перевод Текста
+                    let Rus_Tr_Txt = document.getElementById('Rus_Txt').value
+                    Rus_Tr_Txt = `${Rus_Tr_Txt} ${rus_trs} \n`;
+
+                    document.getElementById('Rus_Txt').value = Rus_Tr_Txt;
+
+                    let tib_snt = document.getElementById(sent_id).innerText
+
+                    //localStorage.setItem(tib_snt, rus_trv);
+                    //Add_IndexedDb(tib_snt, rus_trv, 'Sentence')
+
+                    //выгружает переведенное предложение в файл 03_TR.xml в формате
+                    //номер предложения(id)	тибетское предложение	русский перевод
+                    var dataBase = 'dLotsawa'  //(словарь Lotsawa)
+                    sendHTTP('application/json', '/create/post.esp',
+                        '{"sent_id":"' + sent_id + '", "tib_snt":"' + tib_snt + '", "rus_trs":"' + rus_trs + '", "db":"' + dataBase + '", "ocrData":"snt2txt"}',
+                        function (text) {
+                            console.log(`Export ${rus_trs} --> 03_TR.xml`)
+                        }
+                    );
+                }
+            </script>
+
+            <input type="checkbox" id="setup-checkbox" checked/>
+            <form class="setup-panel">
+                <h4>Настройки</h4>
+                <hr></br>
+                <div>Пользователь:</br>
+                    <input type='radio' name='user' id='Lotsawa' value='Lotsawa' checked>
+                    <label class ='lable' for='Lotsawa'>Lotsawa</label></br>
+                    <input type='radio' name='user' id='OSBL' value='OSBL'>
+                    <label class ='lable' for='OSBL'>OSBL</label>
+                </div></br>
+                <hr></br>
+                <div>Язык перевода Текста:</br>
+                    <input type='radio' name='Language' id='Ru' value='Ru' checked>
+                    <label class='lable' for='Ru'>Ru</label></br>
+                    <input type='radio' name='Language' id='En' value='En'>
+                    <label class='lable' for='En'>En</label>
+                </div></br>
+                <hr></br>
+                <div>Метод Обработки Текста:</br>
+                    <input type='radio' name='ocrData' id='Read' value='Read'>
+                    <label class='lable' for='Read'>Read</label></br>
+                    <input type='radio' name='ocrData' id='Translate' value='TibetanUTFToRus' checked>
+                    <label class='lable' for='Translate'>Translate</label>
+                </div></br>
+                <hr></br>
+                <a href="#" id="Submit_Setup" title='Применить Настройки' class="picto" style="top: 1%;right: .7%;position: absolute;">☸️</a>
+                </br>
+
+            <script id='Submit Setup' type='text/javascript'>
+                Submit_Setup.onclick = function Submit_Setup() {
+                      user= document.querySelector("input[name=user]:checked").value
+                      Language = document.querySelector("input[name=Language]:checked").value
+                      ocrData = document.querySelector("input[name=ocrData]:checked").value
+                      //alert(user, Language, ocrData)
+                    sendHTTP('application/json', '/create/post.esp',
+                        '{"user":"' + user + '", "Language":"' + Language + '"}',
+                        function (text) {
+                            console.log(`user : ${user}, Language : ${Language}, ocrData : ${ocrData}`)
+                        }
+                    );
+
+                }
+            </script>
+            </form>
+
+            <hr style="margin:3px">
+            <div style="margin-left: 77%;">пожелания и предложения на<a href="mailto:emakiri@gmail.com"
+                    class="picto" target="_blank">📧</a></div>
+        </div>
+
+    </footer>
+
+</body>
+
+</html>
