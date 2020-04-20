@@ -1,5 +1,5 @@
 # Lotsawa
-Auto Formatter, Auto Translater Tibetan Text (http://emakiri.pythonanywhere.com/)
+Auto Formatter, Auto Translater Tibetan Text (http://lotsawa.pythonanywhere.com/)
 <br/>
 #### Модуль 1 Текст (Python)
 (можно протестировать по ссылке выше)<br/>
@@ -9,7 +9,7 @@ Auto Formatter, Auto Translater Tibetan Text (http://emakiri.pythonanywhere.com/
 #### Модуль 2 Словарь (Python). 
 2.1 Разбивает на слова<br/>
 2.2 Ищет слово в словаре (db GVector) собирает найденные слова и все их значения в мини-Словарь.<br/>
-2.3 Формирует файл вывода( можно посмотреть здесь - http://emakiri.pythonanywhere.com/)<br/>
+2.3 Формирует файл вывода( можно посмотреть здесь - http://lotsawa.pythonanywhere.com/)<br/>
 <br/>
 #### Модуль 3 Слово (JavaScript+Python)
 3.1 Кликая по слову в тиб. тексте показывает карточку переводов слова.<br/>
